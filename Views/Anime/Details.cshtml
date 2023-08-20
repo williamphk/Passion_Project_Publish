@@ -1,0 +1,98 @@
+﻿@using System.Globalization
+
+@model Passion_Project.Models.ViewModels.DetailsAnime
+@{
+    ViewBag.Title = "View";
+}
+
+<a href="/Anime/List">Go back to list</a>
+<br />
+@if (User.Identity.IsAuthenticated)
+{
+    <a href="/Anime/Edit/@Model.SelectedAnime.AnimeID">Update</a>
+    <br />
+    <a href="/Anime/DeleteConfirm/@Model.SelectedAnime.AnimeID">Delete</a>
+    <br />
+}
+
+@{
+    //Use server rendering to determine an image
+    string pic = "/Content/Images/Animes/default.jpg";
+    string alt = "No Profile Picture Provided.";
+    if (Model.SelectedAnime.AnimeHasPic)
+    {
+        pic = "/Content/Images/Animes/" + Model.SelectedAnime.AnimeID + "." + Model.SelectedAnime.PicExtension;
+        alt = "picture of " + Model.SelectedAnime.AnimeName;
+    }
+}
+
+<div style="display: flex; gap: 25px;">
+    <div class="imagecontainer">
+        <a data-lightbox="anime-@Model.SelectedAnime.AnimeID" href="@pic" data-title="@alt">
+            <img src="@pic" alt="@alt" style="width: 250px;" />
+        </a>
+    </div>
+    <div>
+        <h2>@Model.SelectedAnime.AnimeName</h2>
+        <div>Release Date: @Model.SelectedAnime.ReleaseDate.ToString("MMM dd, yyyy", new CultureInfo("en-US"))</div>
+        <div>Description: @Html.Raw(@Model.SelectedAnime.Description)</div>
+        <div>Rating: @Model.AverageRating</div>
+    </div>
+</div>
+
+<div style="margin-top: 20px">
+    <h3>Genre Associated with: @Model.SelectedAnime.AnimeName</h3>
+    @foreach (var genre in Model.AssociatedGenres)
+    {
+        <a href="/Genre/Details/@genre.GenreID">@genre.GenreName</a>
+        if (User.Identity.IsAuthenticated)
+        {
+            <a style="color:red" href="/Anime/Unassociate/@Model.SelectedAnime.AnimeID?GenreID=@genre.GenreID">[x]</a><br />
+        }
+    }
+
+</div>
+
+
+@if (User.Identity.IsAuthenticated)
+{
+    <div>
+        <h3>Add new Genre to assocaite with @Model.SelectedAnime.AnimeName</h3>
+        <form method="POST" action="/Anime/Associate/@Model.SelectedAnime.AnimeID">
+            <select name="GenreID">
+                @foreach (var genre in Model.AvailableGenres)
+                {
+                    <option value="@genre.GenreID">@genre.GenreName</option>
+                }
+            </select>
+            <input type="submit" value="Associate Genre" />
+        </form>
+    </div>
+}
+
+<div class="container bg-dark text-white" style="margin-top: 20px">
+    <h3>Reviews:</h3>
+    @foreach (var review in Model.RelatedReviews)
+    {
+        <div class="card mt-3 bg-secondary text-white">
+            <div class="card-header bg-dark d-flex justify-content-between">
+                <div>Username: @review.UserName</div>
+                @if (@Model.CurrentUserID == @review.UserID)
+                {
+                    <div>
+                        <a href="/Review/Edit/@review.ReviewID">Update</a>
+                        <a href="/Review/DeleteConfirm/@review.ReviewID">Delete</a>
+                    </div>
+                }
+            </div>
+            <div class="card-body bg-dark">
+                <div>Rating: @review.Rating / 5</div>
+                <div>Comment: @review.Comment</div>
+            </div>
+            <div class="card-footer bg-dark">
+                Reviewed on @review.ReviewDate.ToString("MMM dd, yyyy", new CultureInfo("en-US"))
+            </div>
+        </div>
+    }
+    <a href="/Review/New" style=" display: block; margin-top: 10px;">Add A Review</a>
+</div>
